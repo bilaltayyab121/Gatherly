@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ORGANIZER
+  PARTICIPANT
+}
+
+enum EventType {
+  ONSITE
+  ONLINE
+}
+
+model User {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  password    String
+  role        UserRole  @default(PARTICIPANT)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  events      Event[]   @relation("OrganizedEvents")
+  participations Participation[]
+  resetToken  String?
+  resetTokenExpires DateTime?
+}
+
+model Event {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  type        EventType
+  venue       String?
+  joinLink    String?
+  startDate   DateTime
+  endDate     DateTime
+  totalSeats  Int?
+  contactInfo String
+  attachments String[]   // URLs to stored files
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  organizers  User[]     @relation("OrganizedEvents")
+  participations Participation[]
+  questions   Question[]
+}
+
+model Participation {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  answers   Answer[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, eventId])
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     String
+  question    String
+  isRequired  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  answers     Answer[] // Added opposite relation field
+}
+
+model Answer {
+  id           String     @id @default(uuid())
+  participation Participation @relation(fields: [participationId], references: [id])
+  participationId String
+  question     Question   @relation(fields: [questionId], references: [id])
+  questionId   String
+  answer       String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
