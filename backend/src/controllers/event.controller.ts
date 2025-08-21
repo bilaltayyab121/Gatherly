@@ -73,8 +73,73 @@ export const getEvent = async (req: Request, res: Response) => {
   }
 };
 
+// export const createEvent = async (req: Request, res: Response) => {
+//   try {
+//     const user = req.user as User;
+//     const {
+//       title,
+//       description,
+//       type,
+//       venue,
+//       joinLink,
+//       startDate,
+//       endDate,
+//       totalSeats,
+//       contactInfo,
+//       attachments,
+//       questions,
+//     } = req.body;
+
+//     const event = await prisma.event.create({
+//       data: {
+//         title,
+//         description,
+//         type,
+//         venue: type === "ONLINE" ? null : venue,
+//         joinLink: type === "ONLINE" ? joinLink : null,
+//         startDate: new Date(startDate),
+//         endDate: new Date(endDate),
+//         totalSeats,
+//         contactInfo,
+//         attachments: attachments || [],
+//         organizers: {
+//           connect: [{ id: user.id }],
+//         },
+//         questions: {
+//           create: questions?.map(
+//             (q: { question: string; isRequired: boolean }) => ({
+//               question: q.question,
+//               isRequired: q.isRequired,
+//             })
+//           ),
+//         },
+//       },
+//       include: {
+//         organizers: true,
+//         questions: true,
+//       },
+//     });
+
+//     res.status(201).json({
+//       status: "success",
+//       data: {
+//         event,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: "fail",
+//       message: err instanceof Error ? err.message : "An error occurred",
+//     });
+//   }
+// };
+
 export const createEvent = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+    }
+
     const user = req.user as User;
     const {
       title,
@@ -90,6 +155,21 @@ export const createEvent = async (req: Request, res: Response) => {
       questions,
     } = req.body;
 
+    console.log("Incoming Event Data:", req.body);
+    
+    // Validate required fields
+    if (!title || !description || !type || !venue || !startDate || !endDate || !totalSeats || !contactInfo) {
+  return res.status(400).json({ status: "fail", message: "Missing required fields" });
+}
+
+
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+
+    if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+      return res.status(400).json({ status: "fail", message: "Invalid date format" });
+    }
+
     const event = await prisma.event.create({
       data: {
         title,
@@ -97,22 +177,24 @@ export const createEvent = async (req: Request, res: Response) => {
         type,
         venue: type === "ONLINE" ? null : venue,
         joinLink: type === "ONLINE" ? joinLink : null,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
         totalSeats,
         contactInfo,
         attachments: attachments || [],
         organizers: {
           connect: [{ id: user.id }],
         },
-        questions: {
-          create: questions?.map(
-            (q: { question: string; isRequired: boolean }) => ({
-              question: q.question,
-              isRequired: q.isRequired,
-            })
-          ),
-        },
+        questions: questions
+          ? {
+              create: questions.map(
+                (q: { question: string; isRequired: boolean }) => ({
+                  question: q.question,
+                  isRequired: q.isRequired,
+                })
+              ),
+            }
+          : undefined,
       },
       include: {
         organizers: true,
@@ -122,11 +204,10 @@ export const createEvent = async (req: Request, res: Response) => {
 
     res.status(201).json({
       status: "success",
-      data: {
-        event,
-      },
+      data: { event },
     });
   } catch (err) {
+    console.error(err); // 👈 log full error for debugging
     res.status(400).json({
       status: "fail",
       message: err instanceof Error ? err.message : "An error occurred",
