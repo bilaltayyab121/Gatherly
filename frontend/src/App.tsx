@@ -32,6 +32,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:id" element={<EventDetails />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 {/* Protected routes */}
                 <Route
                   path="/events/create"
@@ -76,6 +77,7 @@ function App() {
 }
 
 import type { ReactNode } from "react";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 function ProtectedRoute({
   children,
