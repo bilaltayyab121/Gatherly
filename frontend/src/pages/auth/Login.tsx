@@ -13,7 +13,7 @@ export default function Login() {
     email: "",
     password: "",
   });
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,10 +41,15 @@ export default function Login() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard/user");
+    if (isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === "ADMIN" || user.role === "ORGANIZER") {
+        navigate("/dashboard/admin");
+      } else {
+        navigate("/dashboard/participant");
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">

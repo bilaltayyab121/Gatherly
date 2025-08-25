@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Alert from "../../components/common/Alert";
-import Card from "../../components/common/Card";
 import { Calendar, ArrowLeft } from "lucide-react";
+
+import Card from "../../components/common/Card";
+import Alert from "../../components/common/Alert";
 
 export default function ForgotPassword() {
   const [error, setError] = useState("");

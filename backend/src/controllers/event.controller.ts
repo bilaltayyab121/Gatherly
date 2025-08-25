@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
 import prisma from "../config/db";
 import { User } from "@prisma/client";
-import { sendEmail } from "../services/mail.service";
+import { Request, Response } from "express";
 import APIFeatures from "../utils/apiFeatures";
+import { sendEmail } from "../services/mail.service";
 
 export const getAllEvents = async (req: Request, res: Response) => {
   try {
@@ -28,6 +28,7 @@ export const getAllEvents = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const getEvent = async (req: Request, res: Response) => {
   try {
     const event = await prisma.event.findUnique({
@@ -73,67 +74,6 @@ export const getEvent = async (req: Request, res: Response) => {
   }
 };
 
-// export const createEvent = async (req: Request, res: Response) => {
-//   try {
-//     const user = req.user as User;
-//     const {
-//       title,
-//       description,
-//       type,
-//       venue,
-//       joinLink,
-//       startDate,
-//       endDate,
-//       totalSeats,
-//       contactInfo,
-//       attachments,
-//       questions,
-//     } = req.body;
-
-//     const event = await prisma.event.create({
-//       data: {
-//         title,
-//         description,
-//         type,
-//         venue: type === "ONLINE" ? null : venue,
-//         joinLink: type === "ONLINE" ? joinLink : null,
-//         startDate: new Date(startDate),
-//         endDate: new Date(endDate),
-//         totalSeats,
-//         contactInfo,
-//         attachments: attachments || [],
-//         organizers: {
-//           connect: [{ id: user.id }],
-//         },
-//         questions: {
-//           create: questions?.map(
-//             (q: { question: string; isRequired: boolean }) => ({
-//               question: q.question,
-//               isRequired: q.isRequired,
-//             })
-//           ),
-//         },
-//       },
-//       include: {
-//         organizers: true,
-//         questions: true,
-//       },
-//     });
-
-//     res.status(201).json({
-//       status: "success",
-//       data: {
-//         event,
-//       },
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: "fail",
-//       message: err instanceof Error ? err.message : "An error occurred",
-//     });
-//   }
-// };
-
 export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -156,18 +96,44 @@ export const createEvent = async (req: Request, res: Response) => {
     } = req.body;
 
     console.log("Incoming Event Data:", req.body);
-    
-    // Validate required fields
-    if (!title || !description || !type || !venue || !startDate || !endDate || !totalSeats || !contactInfo) {
-  return res.status(400).json({ status: "fail", message: "Missing required fields" });
-}
 
+    // Validate required fields
+    if (
+      !title ||
+      !description ||
+      !type ||
+      !startDate ||
+      !endDate ||
+      !totalSeats ||
+      !contactInfo
+    ) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Missing required fields" });
+    }
+
+    // Validate type-specific fields
+    if (type === "ONSITE" && !venue) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Venue is required for onsite events",
+      });
+    }
+
+    if (type === "ONLINE" && !joinLink) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Join link is required for online events",
+      });
+    }
 
     const parsedStartDate = new Date(startDate);
     const parsedEndDate = new Date(endDate);
 
     if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-      return res.status(400).json({ status: "fail", message: "Invalid date format" });
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Invalid date format" });
     }
 
     const event = await prisma.event.create({
@@ -207,7 +173,7 @@ export const createEvent = async (req: Request, res: Response) => {
       data: { event },
     });
   } catch (err) {
-    console.error(err); // 👈 log full error for debugging
+    console.error(err);
     res.status(400).json({
       status: "fail",
       message: err instanceof Error ? err.message : "An error occurred",
@@ -223,7 +189,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     // Check if the user is an organizer of the event
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      include: { organizers: true },
+      include: { organizers: true, questions: true },
     });
 
     if (!event) {
@@ -238,9 +204,57 @@ export const updateEvent = async (req: Request, res: Response) => {
       throw new Error("You are not authorized to update this event");
     }
 
+    const {
+      title,
+      description,
+      type,
+      venue,
+      joinLink,
+      startDate,
+      endDate,
+      totalSeats,
+      contactInfo,
+      attachments,
+      questions,
+    } = req.body;
+
+    // Prepare the update data
+    const updateData: any = {
+      title,
+      description,
+      type,
+      venue: type === "ONLINE" ? null : venue,
+      joinLink: type === "ONLINE" ? joinLink : null,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      totalSeats,
+      contactInfo,
+      attachments,
+    };
+
+    // Handle questions update if provided
+    if (questions) {
+      // First, delete existing questions
+      await prisma.question.deleteMany({
+        where: { eventId: eventId },
+      });
+
+      // Then create new questions
+      updateData.questions = {
+        create: questions.map((q: any) => ({
+          question: q.question,
+          isRequired: q.isRequired,
+        })),
+      };
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
-      data: req.body,
+      data: updateData,
+      include: {
+        organizers: true,
+        questions: true,
+      },
     });
 
     res.status(200).json({
@@ -280,13 +294,40 @@ export const deleteEvent = async (req: Request, res: Response) => {
       throw new Error("You are not authorized to delete this event");
     }
 
-    await prisma.event.delete({
-      where: { id: eventId },
-    });
+    // Delete related records first to avoid foreign key constraint errors
+    await prisma.$transaction([
+      // Delete answers related to this event's participations
+      prisma.answer.deleteMany({
+        where: {
+          participation: {
+            eventId: eventId,
+          },
+        },
+      }),
+
+      // Delete participations for this event
+      prisma.participation.deleteMany({
+        where: {
+          eventId: eventId,
+        },
+      }),
+
+      // Delete questions for this event
+      prisma.question.deleteMany({
+        where: {
+          eventId: eventId,
+        },
+      }),
+
+      // Finally delete the event
+      prisma.event.delete({
+        where: { id: eventId },
+      }),
+    ]);
 
     res.status(204).json({
       status: "success",
-      data: null,
+      message: "Event is deleted successfully.",
     });
   } catch (err) {
     res.status(400).json({

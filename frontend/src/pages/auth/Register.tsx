@@ -10,7 +10,7 @@ import { Calendar } from "lucide-react";
 export default function Register() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (data: RegisterData) => {
@@ -32,10 +32,15 @@ export default function Register() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard/user");
+    if (isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === "ADMIN" || user.role === "ORGANIZER") {
+        navigate("/dashboard/admin");
+      } else {
+        navigate("/dashboard/participant");
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

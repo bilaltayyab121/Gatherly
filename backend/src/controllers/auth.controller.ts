@@ -81,51 +81,6 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// export const forgotPassword = async (req: Request, res: Response) => {
-//   try {
-//     const { email } = req.body;
-
-//     const user = await prisma.user.findUnique({
-//       where: { email },
-//     });
-
-//     if (!user) {
-//       throw new Error('There is no user with that email address');
-//     }
-
-//     const resetToken = signToken(user.id);
-//     const resetTokenExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-//     await prisma.user.update({
-//       where: { id: user.id },
-//       data: {
-//         resetToken,
-//         resetTokenExpires,
-//       },
-//     });
-
-//     const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${resetToken}`;
-
-//     const message = `Forgot your password? Submit a PATCH request with your new password to: ${resetUrl}.\nIf you didn't forget your password, please ignore this email!`;
-
-//     await sendEmail({
-//       email: user.email,
-//       subject: 'Your password reset token (valid for 10 min)',
-//       text: message,
-//     });
-
-//     res.status(200).json({
-//       status: 'success',
-//       message: 'Token sent to email!',
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: 'fail',
-//       message: err instanceof Error ? err.message : 'An error occurred',
-//     });
-//   }
-// };
-
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
