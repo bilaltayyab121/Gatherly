@@ -74,6 +74,113 @@ export const getEvent = async (req: Request, res: Response) => {
   }
 };
 
+// export const createEvent = async (req: Request, res: Response) => {
+//   try {
+//     if (!req.user) {
+//       return res.status(401).json({ status: "fail", message: "Unauthorized" });
+//     }
+
+//     const user = req.user as User;
+//     const {
+//       title,
+//       description,
+//       type,
+//       venue,
+//       joinLink,
+//       startDate,
+//       endDate,
+//       totalSeats,
+//       contactInfo,
+//       attachments,
+//       questions,
+//     } = req.body;
+
+//     console.log("Incoming Event Data:", req.body);
+
+//     // Validate required fields
+//     if (
+//       !title ||
+//       !description ||
+//       !type ||
+//       !startDate ||
+//       !endDate ||
+//       !totalSeats ||
+//       !contactInfo
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "Missing required fields" });
+//     }
+
+//     // Validate type-specific fields
+//     if (type === "ONSITE" && !venue) {
+//       return res.status(400).json({
+//         status: "fail",
+//         message: "Venue is required for onsite events",
+//       });
+//     }
+
+//     if (type === "ONLINE" && !joinLink) {
+//       return res.status(400).json({
+//         status: "fail",
+//         message: "Join link is required for online events",
+//       });
+//     }
+
+//     const parsedStartDate = new Date(startDate);
+//     const parsedEndDate = new Date(endDate);
+
+//     if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "Invalid date format" });
+//     }
+
+//     const event = await prisma.event.create({
+//       data: {
+//         title,
+//         description,
+//         type,
+//         venue: type === "ONLINE" ? null : venue,
+//         joinLink: type === "ONLINE" ? joinLink : null,
+//         startDate: parsedStartDate,
+//         endDate: parsedEndDate,
+//         totalSeats,
+//         contactInfo,
+//         attachments: attachments || [],
+//         organizers: {
+//           connect: [{ id: user.id }],
+//         },
+//         questions: questions
+//           ? {
+//               create: questions.map(
+//                 (q: { question: string; isRequired: boolean }) => ({
+//                   question: q.question,
+//                   isRequired: q.isRequired,
+//                 })
+//               ),
+//             }
+//           : undefined,
+//       },
+//       include: {
+//         organizers: true,
+//         questions: true,
+//       },
+//     });
+
+//     res.status(201).json({
+//       status: "success",
+//       data: { event },
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(400).json({
+//       status: "fail",
+//       message: err instanceof Error ? err.message : "An error occurred",
+//     });
+//   }
+// };
+
 export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -89,7 +196,7 @@ export const createEvent = async (req: Request, res: Response) => {
       joinLink,
       startDate,
       endDate,
-      totalSeats,
+      totalSeats, // This should now be a number
       contactInfo,
       attachments,
       questions,
@@ -104,7 +211,6 @@ export const createEvent = async (req: Request, res: Response) => {
       !type ||
       !startDate ||
       !endDate ||
-      !totalSeats ||
       !contactInfo
     ) {
       return res
@@ -136,6 +242,9 @@ export const createEvent = async (req: Request, res: Response) => {
         .json({ status: "fail", message: "Invalid date format" });
     }
 
+    // Convert totalSeats to integer if it exists
+    const totalSeatsInt = totalSeats ? parseInt(totalSeats, 10) : null;
+
     const event = await prisma.event.create({
       data: {
         title,
@@ -145,7 +254,7 @@ export const createEvent = async (req: Request, res: Response) => {
         joinLink: type === "ONLINE" ? joinLink : null,
         startDate: parsedStartDate,
         endDate: parsedEndDate,
-        totalSeats,
+        totalSeats: totalSeatsInt, // Use the converted value
         contactInfo,
         attachments: attachments || [],
         organizers: {
@@ -481,5 +590,122 @@ export const getEventParticipants = async (req: Request, res: Response) => {
       status: "fail",
       message: err instanceof Error ? err.message : "An error occurred",
     });
+  }
+};
+
+// Add these methods to your existing event controller
+export const getOrganizerEvents = async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    
+    if (!user) {
+      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+    }
+
+    const events = await prisma.event.findMany({
+      where: {
+        organizers: {
+          some: {
+            id: user.id
+          }
+        }
+      },
+      include: {
+        participations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        questions: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Format events for frontend
+    const formattedEvents = events.map(event => ({
+      id: event.id,
+      title: event.title,
+      date: event.startDate.toISOString().split('T')[0],
+      attendees: event.participations.length,
+      status: calculateEventStatus(event.startDate, event.endDate),
+    }));
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        events: formattedEvents,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
+    });
+  }
+};
+
+export const getOrganizerStats = async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    
+    if (!user) {
+      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+    }
+
+    const events = await prisma.event.findMany({
+      where: {
+        organizers: {
+          some: {
+            id: user.id
+          }
+        }
+      },
+      include: {
+        participations: true,
+      },
+    });
+
+    const totalEvents = events.length;
+    const upcomingEvents = events.filter(event => 
+      new Date(event.startDate) > new Date()
+    ).length;
+    const totalAttendees = events.reduce(
+      (sum, event) => sum + event.participations.length,
+      0
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalEvents,
+        upcomingEvents,
+        totalAttendees,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
+    });
+  }
+};
+
+// Helper function to calculate event status
+const calculateEventStatus = (startDate: Date, endDate: Date): "Active" | "Upcoming" | "Completed" => {
+  const now = new Date();
+  if (now < startDate) {
+    return "Upcoming";
+  } else if (now >= startDate && now <= endDate) {
+    return "Active";
+  } else {
+    return "Completed";
   }
 };

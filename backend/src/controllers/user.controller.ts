@@ -119,44 +119,6 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-// export const getMyEvents = async (req: Request, res: Response) => {
-//   try {
-//     const user = req.user as User;
-
-//     const organizedEvents = await prisma.event.findMany({
-//       where: {
-//         organizers: {
-//           some: {
-//             id: user.id,
-//           },
-//         },
-//       },
-//     });
-
-//     const participations = await prisma.participation.findMany({
-//       where: {
-//         userId: user.id,
-//       },
-//       include: {
-//         event: true,
-//       },
-//     });
-
-//     res.status(200).json({
-//       status: 'success',
-//       data: {
-//         organizedEvents,
-//         participations: participations.map((p) => p.event),
-//       },
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       status: 'fail',
-//       message: err instanceof Error ? err.message : 'An error occurred',
-//     });
-//   }
-// };
-
 export const getMyEvents = async (req: Request, res: Response) => {
   try {
     const user = req.user as User;

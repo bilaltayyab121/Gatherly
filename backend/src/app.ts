@@ -23,9 +23,10 @@ if (process.env.NODE_ENV === 'development') {
 // Routes
 app.use('/api/v1', router);
 
+setupSwagger(app);
+
 // Error handling middleware
 app.use(globalErrorHandler);
 
-setupSwagger(app);
 
 export default app;
