@@ -119,9 +119,66 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+// export const getMyEvents = async (req: Request, res: Response) => {
+//   try {
+//     const user = req.user as User;
+
+//     const organizedEvents = await prisma.event.findMany({
+//       where: {
+//         organizers: {
+//           some: {
+//             id: user.id,
+//           },
+//         },
+//       },
+//     });
+
+//     const participations = await prisma.participation.findMany({
+//       where: {
+//         userId: user.id,
+//       },
+//       include: {
+//         event: true,
+//       },
+//     });
+
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         organizedEvents,
+//         participations: participations.map((p) => p.event),
+//       },
+//     });
+//   } catch (err) {
+//     res.status(400).json({
+//       status: 'fail',
+//       message: err instanceof Error ? err.message : 'An error occurred',
+//     });
+//   }
+// };
+
 export const getMyEvents = async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
+
+    // Fetch user details
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        // Add other user fields you want to include
+      }
+    });
+
+    if (!userData) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found',
+      });
+    }
 
     const organizedEvents = await prisma.event.findMany({
       where: {
@@ -145,6 +202,7 @@ export const getMyEvents = async (req: Request, res: Response) => {
     res.status(200).json({
       status: 'success',
       data: {
+        user: userData, // Include user data in the response
         organizedEvents,
         participations: participations.map((p) => p.event),
       },

@@ -14,7 +14,7 @@ app.use(cors());
 app.options("*", cors());
 app.use(express.json());
 app.use(cookieParser());
-setupSwagger(app);
+
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -25,5 +25,7 @@ app.use('/api/v1', router);
 
 // Error handling middleware
 app.use(globalErrorHandler);
+
+setupSwagger(app);
 
 export default app;

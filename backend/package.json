@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "ts-node-dev src/server.ts",
-    "build": "tsc",
+  "build": "prisma generate --data-proxy",
+  "postinstall": "prisma generate",
     "start": "node server.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",

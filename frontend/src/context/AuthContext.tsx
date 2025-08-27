@@ -7,6 +7,7 @@ import {
   getCurrentUser,
   logout as logoutApi,
 } from "../api/auth";
+import { jwtDecode } from "jwt-decode";
 
 interface AuthContextType {
   user: User | null;
@@ -36,7 +37,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadUser = async () => {
       if (token) {
         try {
-          const userData = await getCurrentUser();
+          const response = await getCurrentUser();
+
+          console.log("res => ", response);
+
+          // Handle different response formats
+          let userData: User;
+
+          // If response has a data property (like {status: 'success', data: {...}})
+          if (response?.data) {
+            userData = {
+              id: response.data.id || "",
+              name: response.data.name || "",
+              email: response.data.email || "",
+              role:
+                (response.data.role as "ADMIN" | "ORGANIZER" | "PARTICIPANT") ||
+                "PARTICIPANT",
+              createdAt: response.data.createdAt || new Date().toISOString(),
+            };
+          }
+          // If response is the user object directly (like {id: ..., name: ..., etc.})
+          else {
+            userData = response as User;
+          }
+
+          // If we still don't have a role, try to get it from the token
+          if (!userData.role && token) {
+            try {
+              const decodedToken: any = jwtDecode(token);
+              userData.role = decodedToken.role;
+            } catch (decodeError) {
+              console.error("Failed to decode token", decodeError);
+            }
+          }
+
           setUser(userData);
         } catch (err) {
           console.error("Failed to load user", err);
@@ -60,9 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+
     localStorage.setItem("token", newToken);
     setToken(newToken);
-    setUser(userData);
+    setUser(userData as User);
   };
 
   const register = async ({
@@ -82,9 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       role,
     });
+
     localStorage.setItem("token", newToken);
     setToken(newToken);
-    setUser(userData);
+    setUser(userData as User);
   };
 
   const logout = () => {
