@@ -2,19 +2,21 @@ import path from "path";
 import express, { Express } from "express";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import dotenv from "dotenv";
+dotenv.config();
 
 const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Gatherly APII",
+      title: "Gatherly API",
       version: "1.0.0",
       description: "API documentation for my Node.js app",
     },
     servers: [
       {
         url: process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}/api/v1`
+          ? `https://gatherly-backend.vercel.app/api/v1`
           : "http://localhost:3000/api/v1",
       },
     ],
