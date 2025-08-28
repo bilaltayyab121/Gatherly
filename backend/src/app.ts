@@ -11,19 +11,32 @@ const app = express();
 
 // Middleware
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://gatherly-frontend-nine.vercel.app",
+  /\.vercel\.app$/, // ✅ allow any *.vercel.app frontend (regex)
+];
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        allowedOrigins.some((o) =>
+          typeof o === "string" ? o === origin : o.test(origin)
+        )
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+app.options("*", cors());
+
 
 app.use(express.json());
 app.use(cookieParser());
