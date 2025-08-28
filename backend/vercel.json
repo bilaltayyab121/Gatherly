@@ -18,7 +18,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "http://localhost:5173"
+          "value": "https://gatherly-frontend-nine.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",

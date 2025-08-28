@@ -111,9 +111,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     // Use your frontend URL instead of backend API URL
-    const resetUrl = `${
-      process.env.FRONTEND_URL || "http://localhost:5173"
-    }/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.VERCEL_URL}/reset-password/${resetToken}`;
 
     // Create HTML email template
     const html = `
