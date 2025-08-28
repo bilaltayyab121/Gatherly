@@ -10,8 +10,23 @@ import { setupSwagger } from "./config/swagger";
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://your-frontend-domain.vercel.app"], 
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true, // allow cookies/headers
+  })
+);
 app.options("*", cors());
+
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173", // your frontend
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     credentials: true, // needed if you use cookies / auth headers
+//   })
+// );
+
 app.use(express.json());
 app.use(cookieParser());
 

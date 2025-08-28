@@ -17,13 +17,17 @@ enum EventType {
   ONSITE
   ONLINE
 }
-
 model User {
   id          String    @id @default(uuid())
   name        String
   email       String    @unique
   password    String
   role        UserRole  @default(PARTICIPANT)
+  isApproved  Boolean   @default(false)  // For organizer approval
+  approvedAt  DateTime? // When the organizer was approved
+  approvedBy  User?     @relation("ApprovedOrganizers", fields: [approvedById], references: [id])
+  approvedById String?
+  approvedOrganizers User[] @relation("ApprovedOrganizers") // Add this reverse relation
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   events      Event[]   @relation("OrganizedEvents")

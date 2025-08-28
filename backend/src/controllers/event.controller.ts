@@ -74,113 +74,6 @@ export const getEvent = async (req: Request, res: Response) => {
   }
 };
 
-// export const createEvent = async (req: Request, res: Response) => {
-//   try {
-//     if (!req.user) {
-//       return res.status(401).json({ status: "fail", message: "Unauthorized" });
-//     }
-
-//     const user = req.user as User;
-//     const {
-//       title,
-//       description,
-//       type,
-//       venue,
-//       joinLink,
-//       startDate,
-//       endDate,
-//       totalSeats,
-//       contactInfo,
-//       attachments,
-//       questions,
-//     } = req.body;
-
-//     console.log("Incoming Event Data:", req.body);
-
-//     // Validate required fields
-//     if (
-//       !title ||
-//       !description ||
-//       !type ||
-//       !startDate ||
-//       !endDate ||
-//       !totalSeats ||
-//       !contactInfo
-//     ) {
-//       return res
-//         .status(400)
-//         .json({ status: "fail", message: "Missing required fields" });
-//     }
-
-//     // Validate type-specific fields
-//     if (type === "ONSITE" && !venue) {
-//       return res.status(400).json({
-//         status: "fail",
-//         message: "Venue is required for onsite events",
-//       });
-//     }
-
-//     if (type === "ONLINE" && !joinLink) {
-//       return res.status(400).json({
-//         status: "fail",
-//         message: "Join link is required for online events",
-//       });
-//     }
-
-//     const parsedStartDate = new Date(startDate);
-//     const parsedEndDate = new Date(endDate);
-
-//     if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-//       return res
-//         .status(400)
-//         .json({ status: "fail", message: "Invalid date format" });
-//     }
-
-//     const event = await prisma.event.create({
-//       data: {
-//         title,
-//         description,
-//         type,
-//         venue: type === "ONLINE" ? null : venue,
-//         joinLink: type === "ONLINE" ? joinLink : null,
-//         startDate: parsedStartDate,
-//         endDate: parsedEndDate,
-//         totalSeats,
-//         contactInfo,
-//         attachments: attachments || [],
-//         organizers: {
-//           connect: [{ id: user.id }],
-//         },
-//         questions: questions
-//           ? {
-//               create: questions.map(
-//                 (q: { question: string; isRequired: boolean }) => ({
-//                   question: q.question,
-//                   isRequired: q.isRequired,
-//                 })
-//               ),
-//             }
-//           : undefined,
-//       },
-//       include: {
-//         organizers: true,
-//         questions: true,
-//       },
-//     });
-
-//     res.status(201).json({
-//       status: "success",
-//       data: { event },
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(400).json({
-//       status: "fail",
-//       message: err instanceof Error ? err.message : "An error occurred",
-//     });
-//   }
-// };
-
 export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -188,6 +81,15 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 
     const user = req.user as User;
+
+    // Check if user is an approved organizer or admin
+    if (user.role === "ORGANIZER" && !user.isApproved) {
+      return res.status(403).json({
+        status: "fail",
+        message: "Your organizer account has not been approved yet",
+      });
+    }
+
     const {
       title,
       description,

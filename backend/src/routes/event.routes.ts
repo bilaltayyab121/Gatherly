@@ -1,5 +1,9 @@
 import express from "express";
-import { protect, restrictTo } from "../middleware/auth.middleware";
+import {
+  protect,
+  restrictTo,
+  checkOrganizerApproved,
+} from "../middleware/auth.middleware";
 import {
   getAllEvents,
   getEvent,
@@ -105,89 +109,27 @@ router.get(
   getEventParticipants
 );
 
-// Admin/Organizer routes
-router.use(restrictTo("ADMIN", "ORGANIZER"));
-
-/**
- * @swagger
- * /events:
- *   post:
- *     summary: Create a new event
- *     tags: [Events]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *               date:
- *                 type: string
- *                 format: date
- *     responses:
- *       201:
- *         description: Event created successfully
- *       400:
- *         description: Invalid input
- */
-router.post("/", createEvent);
-
-/**
- * @swagger
- * /events/{id}:
- *   patch:
- *     summary: Update an event
- *     tags: [Events]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: Event ID
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Event updated successfully
- *       404:
- *         description: Event not found
- */
-router.patch("/:id", updateEvent);
-
-/**
- * @swagger
- * /events/{id}:
- *   delete:
- *     summary: Delete an event
- *     tags: [Events]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: Event ID
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Event deleted successfully
- *       404:
- *         description: Event not found
- */
-router.delete("/:id", deleteEvent);
+// Apply to routes that require organizer privileges
+router.post(
+  "/",
+  protect,
+  restrictTo("ORGANIZER", "ADMIN"),
+  checkOrganizerApproved,
+  createEvent
+);
+router.patch(
+  "/:id",
+  protect,
+  restrictTo("ORGANIZER", "ADMIN"),
+  checkOrganizerApproved,
+  updateEvent
+);
+router.delete(
+  "/:id",
+  protect,
+  restrictTo("ORGANIZER", "ADMIN"),
+  checkOrganizerApproved,
+  deleteEvent
+);
 
 export default router;

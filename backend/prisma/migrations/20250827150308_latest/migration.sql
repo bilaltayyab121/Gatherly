@@ -11,6 +11,9 @@ CREATE TABLE "public"."User" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "public"."UserRole" NOT NULL DEFAULT 'PARTICIPANT',
+    "isApproved" BOOLEAN NOT NULL DEFAULT false,
+    "approvedAt" TIMESTAMP(3),
+    "approvedById" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "resetToken" TEXT,
@@ -90,6 +93,9 @@ CREATE UNIQUE INDEX "Participation_userId_eventId_key" ON "public"."Participatio
 
 -- CreateIndex
 CREATE INDEX "_OrganizedEvents_B_index" ON "public"."_OrganizedEvents"("B");
+
+-- AddForeignKey
+ALTER TABLE "public"."User" ADD CONSTRAINT "User_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "public"."User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Participation" ADD CONSTRAINT "Participation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

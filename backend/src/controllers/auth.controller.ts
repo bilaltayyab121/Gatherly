@@ -1,10 +1,9 @@
-import { Request, Response } from 'express';
-import prisma from '../config/db';
-import { signToken } from '../config/jwt';
-import { comparePassword, hashPassword } from '../utils/helpers';
-import { sendEmail } from '../services/mail.service';
-import jwt from 'jsonwebtoken';
-
+import { Request, Response } from "express";
+import prisma from "../config/db";
+import { signToken } from "../config/jwt";
+import { comparePassword, hashPassword } from "../utils/helpers";
+import { sendEmail } from "../services/mail.service";
+import jwt from "jsonwebtoken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -17,14 +16,14 @@ export const register = async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
-        role: role || 'PARTICIPANT',
+        role: role || "PARTICIPANT",
       },
     });
 
     const token = signToken(user.id);
 
     res.status(201).json({
-      status: 'success',
+      status: "success",
       token,
       data: {
         user: {
@@ -32,13 +31,14 @@ export const register = async (req: Request, res: Response) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          isApproved: user.isApproved, // Add this line
         },
       },
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new Error('Please provide email and password');
+      throw new Error("Please provide email and password");
     }
 
     const user = await prisma.user.findUnique({
@@ -56,13 +56,13 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!user || !(await comparePassword(password, user.password))) {
-      throw new Error('Incorrect email or password');
+      throw new Error("Incorrect email or password");
     }
 
     const token = signToken(user.id);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       token,
       data: {
         user: {
@@ -70,13 +70,14 @@ export const login = async (req: Request, res: Response) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          isApproved: user.isApproved, // Add this line
         },
       },
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -92,8 +93,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!user) {
       // For security reasons, don't reveal if the email exists or not
       return res.status(200).json({
-        status: 'success',
-        message: 'If the email is registered, you will receive a password reset link',
+        status: "success",
+        message:
+          "If the email is registered, you will receive a password reset link",
       });
     }
 
@@ -109,7 +111,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     // Use your frontend URL instead of backend API URL
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const resetUrl = `${
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    }/reset-password/${resetToken}`;
 
     // Create HTML email template
     const html = `
@@ -181,20 +185,21 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await sendEmail({
       email: user.email,
-      subject: 'EventHub - Password Reset Request',
+      subject: "EventHub - Password Reset Request",
       text: message,
       html: html,
     });
 
     res.status(200).json({
-      status: 'success',
-      message: 'Password reset link sent to your email!',
+      status: "success",
+      message: "Password reset link sent to your email!",
     });
   } catch (err) {
-    console.error('Error in forgotPassword:', err);
+    console.error("Error in forgotPassword:", err);
     res.status(500).json({
-      status: 'error',
-      message: 'An error occurred while processing your request. Please try again later.',
+      status: "error",
+      message:
+        "An error occurred while processing your request. Please try again later.",
     });
   }
 };
@@ -205,16 +210,18 @@ export const resetPassword = async (req: Request, res: Response) => {
     const { password } = req.body;
 
     if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET is not defined');
+      throw new Error("JWT_SECRET is not defined");
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as unknown as { id: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as unknown as {
+      id: string;
+    };
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     const hashedPassword = await hashPassword(password);
@@ -231,7 +238,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const newToken = signToken(user.id);
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       token: newToken,
       data: {
         user: {
@@ -244,8 +251,8 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };

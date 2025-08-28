@@ -68,3 +68,20 @@ export const restrictTo = (...roles: string[]) => {
     next();
   };
 };
+
+export const checkOrganizerApproved = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user as User;
+
+  if (user.role === "ORGANIZER" && !user.isApproved) {
+    return res.status(403).json({
+      status: "fail",
+      message: "Your organizer account has not been approved yet",
+    });
+  }
+
+  next();
+};
