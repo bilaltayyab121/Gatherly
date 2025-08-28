@@ -1,5 +1,5 @@
 import { Event, Participation, Prisma, Question, User } from '@prisma/client';
-import prisma from '../config/db';
+import prisma from "../controllers/config/db";
 import AppError from '../utils/appError';
 import { sendEmail } from './mail.service';
 

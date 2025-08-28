@@ -1,6 +1,6 @@
-import prisma from '../config/db';
-import { User } from '@prisma/client';
-import { Request, Response } from 'express';
+import prisma from "./config/db";
+import { User } from "@prisma/client";
+import { Request, Response } from "express";
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -15,7 +15,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       results: users.length,
       data: {
         users,
@@ -23,8 +23,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -43,19 +43,19 @@ export const getUser = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      throw new Error('No user found with that ID');
+      throw new Error("No user found with that ID");
     }
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
         user,
       },
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -65,8 +65,8 @@ export const updateUserRole = async (req: Request, res: Response) => {
     const currentUser = req.user as User;
     const { role } = req.body;
 
-    if (currentUser.role !== 'ADMIN') {
-      throw new Error('Only admins can update user roles');
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Only admins can update user roles");
     }
 
     const user = await prisma.user.update({
@@ -82,15 +82,15 @@ export const updateUserRole = async (req: Request, res: Response) => {
     });
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
         user,
       },
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -99,8 +99,8 @@ export const deleteUser = async (req: Request, res: Response) => {
   try {
     const currentUser = req.user as User;
 
-    if (currentUser.role !== 'ADMIN') {
-      throw new Error('Only admins can delete users');
+    if (currentUser.role !== "ADMIN") {
+      throw new Error("Only admins can delete users");
     }
 
     await prisma.user.delete({
@@ -108,13 +108,13 @@ export const deleteUser = async (req: Request, res: Response) => {
     });
 
     res.status(204).json({
-      status: 'success',
+      status: "success",
       data: null,
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };
@@ -132,13 +132,13 @@ export const getMyEvents = async (req: Request, res: Response) => {
         email: true,
         role: true,
         // Add other user fields you want to include
-      }
+      },
     });
 
     if (!userData) {
       return res.status(404).json({
-        status: 'fail',
-        message: 'User not found',
+        status: "fail",
+        message: "User not found",
       });
     }
 
@@ -162,7 +162,7 @@ export const getMyEvents = async (req: Request, res: Response) => {
     });
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
         user: userData, // Include user data in the response
         organizedEvents,
@@ -171,8 +171,8 @@ export const getMyEvents = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(400).json({
-      status: 'fail',
-      message: err instanceof Error ? err.message : 'An error occurred',
+      status: "fail",
+      message: err instanceof Error ? err.message : "An error occurred",
     });
   }
 };

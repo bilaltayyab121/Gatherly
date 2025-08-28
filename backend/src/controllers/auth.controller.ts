@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import prisma from "../config/db";
-import { signToken } from "../config/jwt";
+import prisma from "./config/db";
+import { signToken } from "./config/jwt";
 import { comparePassword, hashPassword } from "../utils/helpers";
 import { sendEmail } from "../services/mail.service";
 import jwt from "jsonwebtoken";

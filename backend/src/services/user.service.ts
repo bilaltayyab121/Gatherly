@@ -1,5 +1,5 @@
 import { User, UserRole } from '@prisma/client';
-import prisma from '../config/db';
+import prisma from "../controllers/config/db";
 import AppError from '../utils/appError';
 
 // export const getAllUsers = async (): Promise<User[]> => {

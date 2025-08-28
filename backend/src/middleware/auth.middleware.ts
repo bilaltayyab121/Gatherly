@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/db';
+import prisma from "../controllers/config/db";
 import { User } from '@prisma/client';
 import AppError from '../utils/appError';
 

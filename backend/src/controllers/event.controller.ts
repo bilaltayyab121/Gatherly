@@ -1,4 +1,4 @@
-import prisma from "../config/db";
+import prisma from "./config/db";
 import { User } from "@prisma/client";
 import { Request, Response } from "express";
 import APIFeatures from "../utils/apiFeatures";
@@ -499,7 +499,7 @@ export const getEventParticipants = async (req: Request, res: Response) => {
 export const getOrganizerEvents = async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
-    
+
     if (!user) {
       return res.status(401).json({ status: "fail", message: "Unauthorized" });
     }
@@ -508,9 +508,9 @@ export const getOrganizerEvents = async (req: Request, res: Response) => {
       where: {
         organizers: {
           some: {
-            id: user.id
-          }
-        }
+            id: user.id,
+          },
+        },
       },
       include: {
         participations: {
@@ -532,10 +532,10 @@ export const getOrganizerEvents = async (req: Request, res: Response) => {
     });
 
     // Format events for frontend
-    const formattedEvents = events.map(event => ({
+    const formattedEvents = events.map((event) => ({
       id: event.id,
       title: event.title,
-      date: event.startDate.toISOString().split('T')[0],
+      date: event.startDate.toISOString().split("T")[0],
       attendees: event.participations.length,
       status: calculateEventStatus(event.startDate, event.endDate),
     }));
@@ -557,7 +557,7 @@ export const getOrganizerEvents = async (req: Request, res: Response) => {
 export const getOrganizerStats = async (req: Request, res: Response) => {
   try {
     const user = req.user as User;
-    
+
     if (!user) {
       return res.status(401).json({ status: "fail", message: "Unauthorized" });
     }
@@ -566,9 +566,9 @@ export const getOrganizerStats = async (req: Request, res: Response) => {
       where: {
         organizers: {
           some: {
-            id: user.id
-          }
-        }
+            id: user.id,
+          },
+        },
       },
       include: {
         participations: true,
@@ -576,8 +576,8 @@ export const getOrganizerStats = async (req: Request, res: Response) => {
     });
 
     const totalEvents = events.length;
-    const upcomingEvents = events.filter(event => 
-      new Date(event.startDate) > new Date()
+    const upcomingEvents = events.filter(
+      (event) => new Date(event.startDate) > new Date()
     ).length;
     const totalAttendees = events.reduce(
       (sum, event) => sum + event.participations.length,
@@ -601,7 +601,10 @@ export const getOrganizerStats = async (req: Request, res: Response) => {
 };
 
 // Helper function to calculate event status
-const calculateEventStatus = (startDate: Date, endDate: Date): "Active" | "Upcoming" | "Completed" => {
+const calculateEventStatus = (
+  startDate: Date,
+  endDate: Date
+): "Active" | "Upcoming" | "Completed" => {
   const now = new Date();
   if (now < startDate) {
     return "Upcoming";

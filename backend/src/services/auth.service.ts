@@ -1,8 +1,8 @@
 import { User } from '@prisma/client';
-import prisma from '../config/db';
-import { comparePassword, hashPassword } from '../utils/helpers';
-import AppError from '../utils/appError';
-import { signToken } from '../config/jwt';
+import prisma from "../controllers/config/db";
+import { comparePassword, hashPassword } from "../utils/helpers";
+import AppError from "../utils/appError";
+import { signToken } from "../controllers/config/jwt";
 
 export const createUser = async (userData: {
   name: string;
