@@ -1,92 +1,3 @@
-// import { Link } from "react-router-dom";
-// import type { Event } from "../../types/types";
-// import Button from "../common/Button";
-
-// interface EventCardProps {
-//   event: Event;
-//   onDelete?: (id: string) => void;
-// }
-
-// export default function EventCard({ event, onDelete }: EventCardProps) {
-//   const isPastEvent = new Date(event.endDate) < new Date();
-//   const availableSeats = event.totalSeats
-//     ? event.totalSeats - (event.participations?.length || 0)
-//     : null;
-
-//   return (
-//     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-//       <div className="p-6">
-//         <div className="flex justify-between items-start mb-4">
-//           <h3 className="text-xl font-semibold text-gray-900">{event.title}</h3>
-//           <span
-//             className={`px-2 py-1 rounded-full text-xs font-medium ${
-//               event.type === "ONLINE"
-//                 ? "bg-blue-100 text-blue-800"
-//                 : "bg-green-100 text-green-800"
-//             }`}
-//           >
-//             {event.type}
-//           </span>
-//         </div>
-
-//         <p className="text-gray-600 mb-4 line-clamp-2">{event.description}</p>
-
-//         <div className="space-y-2 text-sm text-gray-600 mb-4">
-//           <div className="flex items-center">
-//             <span className="font-medium">Date:</span>
-//             <span className="ml-2">
-//               {new Date(event.startDate).toLocaleDateString()} -{" "}
-//               {new Date(event.endDate).toLocaleDateString()}
-//             </span>
-//           </div>
-
-//           {event.totalSeats && (
-//             <div className="flex items-center">
-//               <span className="font-medium">Seats:</span>
-//               <span className="ml-2">
-//                 {availableSeats} / {event.totalSeats} available
-//               </span>
-//             </div>
-//           )}
-
-//           <div className="flex items-center">
-//             <span className="font-medium">Organized by:</span>
-//             <span className="ml-2">
-//               {event.organizers.map((org) => org.name).join(", ")}
-//             </span>
-//           </div>
-//         </div>
-
-//         <div className="flex justify-between items-center">
-//           <Link
-//             to={`/events/${event.id}`}
-//             className="text-primary-600 hover:text-primary-800 font-medium"
-//           >
-//             View Details
-//           </Link>
-
-//           {onDelete && (
-//             <Button
-//               variant="danger"
-//               size="sm"
-//               onClick={() => onDelete(event.id)}
-//             >
-//               Delete
-//             </Button>
-//           )}
-//         </div>
-
-//         {isPastEvent && (
-//           <div className="mt-3 bg-gray-100 px-3 py-1 rounded text-xs text-gray-600">
-//             Past Event
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import type { Event } from "../../types/types";
@@ -100,49 +11,51 @@ interface EventCardProps {
   onLeave?: (id: string) => void;
   showActions?: boolean;
   showOrganizerActions?: boolean;
+  showJoinButton?: boolean;
 }
 
-export default function EventCard({ 
-  event, 
-  onDelete, 
-  onJoin, 
-  onLeave, 
+export default function EventCard({
+  event,
+  onDelete,
+  onJoin,
+  onLeave,
   showActions = true,
-  showOrganizerActions = false 
+  showOrganizerActions = false,
 }: EventCardProps) {
   const { user, isAuthenticated } = useAuth();
   const isPastEvent = new Date(event.endDate) < new Date();
   const availableSeats = event.totalSeats
     ? event.totalSeats - (event.participations?.length || 0)
     : null;
-  
+
   const isParticipating = event.participations?.some(
-    (participation) => participation.userId === user?.id
+    (participation) => participation.user?.id === user?.id
   );
-  
-  const isOrganizer = event.organizers?.some(
-    (organizer) => organizer.id === user?.id
-  ) || user?.role === "ADMIN";
-  
-  const canJoin = !isPastEvent && 
-                 availableSeats !== null && 
-                 availableSeats > 0 && 
-                 !isParticipating &&
-                 !isOrganizer;
+
+  const isOrganizer =
+    event.organizers?.some((organizer) => organizer.id === user?.id) ||
+    user?.role === "ADMIN";
+
+  const canJoin =
+    !isPastEvent &&
+    availableSeats !== null &&
+    availableSeats > 0 &&
+    !isParticipating &&
+    !isOrganizer;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -151,11 +64,14 @@ export default function EventCard({
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">{event.title}</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">
+              {event.title}
+            </h3>
             <div className="flex items-center text-sm text-gray-500">
               <Calendar className="h-4 w-4 mr-1" />
               <span>
-                {formatDate(event.startDate)} • {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                {formatDate(event.startDate)} • {formatTime(event.startDate)} -{" "}
+                {formatTime(event.endDate)}
               </span>
             </div>
           </div>
@@ -179,13 +95,13 @@ export default function EventCard({
               <span>{event.venue}</span>
             </div>
           )}
-          
+
           {event.joinLink && event.type === "ONLINE" && (
             <div className="flex items-center">
               <span className="font-medium">Join Link:</span>
-              <a 
-                href={event.joinLink} 
-                target="_blank" 
+              <a
+                href={event.joinLink}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="ml-2 text-blue-600 hover:underline"
               >
@@ -236,7 +152,7 @@ export default function EventCard({
                       Join Event
                     </Button>
                   )}
-                  
+
                   {isParticipating && onLeave && (
                     <Button
                       variant="outline"
@@ -248,7 +164,7 @@ export default function EventCard({
                   )}
                 </>
               )}
-              
+
               {/* Organizer actions */}
               {showOrganizerActions && isOrganizer && (
                 <>
@@ -257,7 +173,7 @@ export default function EventCard({
                       Edit
                     </Button>
                   </Link>
-                  
+
                   {onDelete && (
                     <Button
                       variant="danger"
@@ -279,7 +195,7 @@ export default function EventCard({
             Past Event
           </div>
         )}
-        
+
         {isParticipating && !isPastEvent && (
           <div className="mt-3 bg-green-100 px-3 py-2 rounded text-sm text-green-800">
             You're attending this event

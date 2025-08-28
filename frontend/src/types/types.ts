@@ -69,3 +69,4 @@ export interface RegisterData extends LoginData {
   name: string;
   role?: 'ADMIN' | 'ORGANIZER' | 'PARTICIPANT';
 }
+

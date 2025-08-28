@@ -17,7 +17,7 @@ interface AuthContextType {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    role?: "ADMIN" | "ORGANIZER" | "PARTICIPANT";
   }) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -37,7 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadUser = async () => {
       if (token) {
         try {
-          const response = await getCurrentUser();
+          // const response = await getCurrentUser();
+          const response = (await getCurrentUser()) as unknown;
 
           console.log("res => ", response);
 
@@ -45,15 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           let userData: User;
 
           // If response has a data property (like {status: 'success', data: {...}})
-          if (response?.data) {
+          if (
+            typeof response === "object" &&
+            response !== null &&
+            "data" in response
+          ) {
+            const responseData = response.data as any;
             userData = {
-              id: response.data.id || "",
-              name: response.data.name || "",
-              email: response.data.email || "",
+              id: responseData.id || "",
+              name: responseData.name || "",
+              email: responseData.email || "",
               role:
-                (response.data.role as "ADMIN" | "ORGANIZER" | "PARTICIPANT") ||
+                (responseData.role as "ADMIN" | "ORGANIZER" | "PARTICIPANT") ||
                 "PARTICIPANT",
-              createdAt: response.data.createdAt || new Date().toISOString(),
+              createdAt: responseData.createdAt || new Date().toISOString(),
             };
           }
           // If response is the user object directly (like {id: ..., name: ..., etc.})
@@ -109,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    role?: "ADMIN" | "ORGANIZER" | "PARTICIPANT";
   }) => {
     const { token: newToken, user: userData } = await registerApi({
       name,

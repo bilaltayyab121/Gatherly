@@ -46,12 +46,14 @@ export default function ParticipantDashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">My Events</h1>
-      
+
       {!events || events.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">You haven't joined any events yet.</p>
-          <a 
-            href="/events" 
+          <p className="text-gray-600 mb-4">
+            You haven't joined any events yet.
+          </p>
+          <a
+            href="/events"
             className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors"
           >
             Browse Events
@@ -59,12 +61,8 @@ export default function ParticipantDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map(event => (
-            <EventCard
-              key={event.id}
-              event={event}
-              showJoinButton={false}
-            />
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       )}
