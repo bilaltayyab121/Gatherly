@@ -4,16 +4,19 @@
   "description": "Backend for Event Management Platform",
   "main": "server.js",
   "scripts": {
-    "dev": "ts-node-dev src/server.ts",
     "build": "tsc",
+    "start": "node dist/server.js",
+    "vercel-dev": "vercel dev",
+    "dev": "ts-node-dev src/server.ts",
     "postinstall": "prisma generate",
-    "start": "node server.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "seed": "ts-node prisma/seed.ts",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

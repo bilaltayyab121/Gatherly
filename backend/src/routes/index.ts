@@ -11,6 +11,6 @@ router.use('/auth', authRouter);
 router.use('/events', eventRouter);
 router.use('/users', userRouter);
 router.use('/organizer', organizerRouter); // Add this line
-router.use('/organizer', adminRouter); // Add this line
+router.use('/admin', adminRouter); // Add this line
 
 export default router;

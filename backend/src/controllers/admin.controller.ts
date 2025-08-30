@@ -1,8 +1,8 @@
 import prisma from "./config/db";
 import { Request, Response } from "express";
 import { User } from "@prisma/client";
-import { signToken } from "@/controllers/config/jwt";
-import { hashPassword } from "@/utils/helpers";
+import { signToken } from "../controllers/config/jwt";
+import { hashPassword } from "../utils/helpers";
 
 export const getPendingOrganizers = async (req: Request, res: Response) => {
   try {
